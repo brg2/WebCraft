@@ -9,6 +9,7 @@ MOUSE = {};
 MOUSE.DOWN = 1;
 MOUSE.UP = 2;
 MOUSE.MOVE = 3;
+MOUSE.SCROLL = 4;
 
 // Constructor()
 //
@@ -58,8 +59,15 @@ Player.prototype.setInputCanvas = function( id )
 	canvas.onmousedown = function( e ) { t.onMouseEvent( e.clientX, e.clientY, MOUSE.DOWN, e.which == 3 ); return false; }
 	canvas.onmouseup = function( e ) { t.onMouseEvent( e.clientX, e.clientY, MOUSE.UP, e.which == 3 ); return false; }
 	canvas.onmousemove = function( e ) { t.onMouseEvent( e.clientX, e.clientY, MOUSE.MOVE, e.which == 3 ); return false; }
+	canvas.onmousewheel = function( e ) {
+		if ('wheelDeltaX' in e) {t.onMouseEvent( e.wheelDeltaX, e.wheelDeltaY, MOUSE.SCROLL, e.which == 3);}
+		else if ('axis' in e) {
+			if (e.axis === e.HORIZONTAL_AXIS) {t.onMouseEvent( e.detail, 0, MOUSE.SCROLL, e.which == 3);}
+			else {t.onMouseEvent( 0, e.detail, MOUSE.SCROLL, e.which == 3);}
+		}
+		return false;
+	}
 }
-
 // setMaterialSelector( id )
 //
 // Sets the table with the material selectors.
@@ -127,7 +135,7 @@ Player.prototype.onKeyEvent = function( keyCode, down )
 
 Player.prototype.onMouseEvent = function( x, y, type, rmb )
 {
-	if ( type == MOUSE.DOWN ) {
+	if ( type == MOUSE.DOWN) {
 		this.dragStart = { x: x, y: y };
 		this.mouseDown = true;
 		this.yawStart = this.targetYaw = this.angles[1];
@@ -143,6 +151,12 @@ Player.prototype.onMouseEvent = function( x, y, type, rmb )
 		this.dragging = true;
 		this.targetPitch = this.pitchStart - ( y - this.dragStart.y ) / 200;
 		this.targetYaw = this.yawStart + ( x - this.dragStart.x ) / 200;
+
+		this.canvas.style.cursor = "move";
+	} else if ( type == MOUSE.SCROLL ) {
+		this.dragging = true;
+		this.targetPitch = this.angles[0] - ( y / 200 );
+		this.targetYaw = this.angles[1] + ( x / 200 );
 
 		this.canvas.style.cursor = "move";
 	}
